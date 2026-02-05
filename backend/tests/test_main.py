@@ -11,7 +11,7 @@ def test_root_endpoint():
     data = response.json()
     assert "message" in data
     assert "version" in data
-    assert data["version"] == "0.2.0"  # Updated for Phase 2
+    assert data["version"] == "0.3.0"  # Updated for Phase 3
 
 def test_health_endpoint():
     """Test the health check endpoint"""

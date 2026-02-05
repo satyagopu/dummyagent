@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
 from dotenv import load_dotenv
-from app.api import auth
+from app.api import auth, workflows
 from app.db.database import create_tables
 
 # Load environment variables
@@ -11,7 +11,7 @@ load_dotenv()
 app = FastAPI(
     title="AgentWeave API",
     description="AI Workflow Automation Platform",
-    version="0.2.0"  # Updated for Phase 2
+    version="0.3.0"  # Updated for Phase 3
 )
 
 # Get allowed origins from environment
@@ -35,6 +35,7 @@ async def startup_event():
 
 # Include routers
 app.include_router(auth.router)
+app.include_router(workflows.router)
 
 
 @app.get("/")
@@ -42,12 +43,13 @@ async def root():
     """Health check endpoint"""
     return {
         "message": "Welcome to AgentWeave API! 🤖",
-        "version": "0.2.0",
-        "status": "Phase 2 - Authentication Complete",
+        "version": "0.3.0",
+        "status": "Phase 3 - Modern UI & Canvas Foundation",
         "api_version": "v1",
         "endpoints": {
             "health": "/health",
             "auth": "/auth",
+            "workflows": "/workflows",
             "docs": "/docs",
             "openapi": "/openapi.json"
         }

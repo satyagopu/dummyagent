@@ -2,10 +2,33 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import LoginPage from '../pages/LoginPage';
-import { useAuthStore } from '../store/auth-store';
+import { useAuthStore } from '@/store/auth-store';
 
 // Mock the auth store
 vi.mock('../store/auth-store');
+
+// Mock framer-motion
+vi.mock('framer-motion', () => ({
+    motion: {
+        div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+        p: ({ children, ...props }: any) => <p {...props}>{children}</p>,
+    },
+}));
+
+// Mock UI components
+vi.mock('@/components/ui/button', () => ({
+    Button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+}));
+
+vi.mock('@/components/ui/card', () => ({
+    Card: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+    CardHeader: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+    CardTitle: ({ children, ...props }: any) => <h2 {...props}>{children}</h2>,
+    CardDescription: ({ children, ...props }: any) => <p {...props}>{children}</p>,
+    CardContent: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+}));
+
+// Mock react-router-dom
 vi.mock('react-router-dom', async () => {
     const actual = await vi.importActual('react-router-dom');
     return {
@@ -42,8 +65,8 @@ describe('LoginPage', () => {
         );
 
         expect(screen.getByText('Welcome Back')).toBeInTheDocument();
-        expect(screen.getByLabelText('Email')).toBeInTheDocument();
-        expect(screen.getByLabelText('Password')).toBeInTheDocument();
+        expect(screen.getByLabelText(/Email/i)).toBeInTheDocument();
+        expect(screen.getByLabelText(/Password/i)).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
     });
 
@@ -56,8 +79,8 @@ describe('LoginPage', () => {
             </BrowserRouter>
         );
 
-        const emailInput = screen.getByLabelText('Email');
-        const passwordInput = screen.getByLabelText('Password');
+        const emailInput = screen.getByLabelText(/Email/i);
+        const passwordInput = screen.getByLabelText(/Password/i);
         const submitButton = screen.getByRole('button', { name: /sign in/i });
 
         fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
@@ -113,8 +136,8 @@ describe('LoginPage', () => {
             </BrowserRouter>
         );
 
-        expect(screen.getByLabelText('Email')).toBeDisabled();
-        expect(screen.getByLabelText('Password')).toBeDisabled();
+        expect(screen.getByLabelText(/Email/i)).toBeDisabled();
+        expect(screen.getByLabelText(/Password/i)).toBeDisabled();
         expect(screen.getByRole('button', { name: /signing in/i })).toBeDisabled();
     });
 });

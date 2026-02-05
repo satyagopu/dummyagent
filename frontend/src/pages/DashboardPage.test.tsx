@@ -1,44 +1,95 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import DashboardPage from '../pages/DashboardPage';
-import { useAuthStore } from '../store/auth-store';
+import { useAuthStore } from '@/store/auth-store';
+import { toast } from 'sonner';
 
 // Mock the auth store
 vi.mock('../store/auth-store');
-vi.mock('react-router-dom', async () => {
-    const actual = await vi.importActual('react-router-dom');
-    return {
-        ...actual,
-        useNavigate: () => vi.fn(),
-    };
-});
+
+// Mock framer-motion
+vi.mock('framer-motion', () => ({
+    motion: {
+        div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+    },
+}));
+
+// Mock sonner
+vi.mock('sonner', () => ({
+    toast: {
+        success: vi.fn(),
+        error: vi.fn(),
+    },
+}));
+
+// Mock UI components
+vi.mock('../components/ui/card', () => ({
+    Card: ({ children, ...props }: any) => <div data-testid="card" {...props}>{children}</div>,
+    CardHeader: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+    CardTitle: ({ children, ...props }: any) => <h3 {...props}>{children}</h3>,
+    CardDescription: ({ children, ...props }: any) => <p {...props}>{children}</p>,
+    CardContent: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+}));
+
+vi.mock('../components/ui/button', () => ({
+    Button: ({ children, onClick, ...props }: any) => (
+        <button onClick={onClick} {...props}>{children}</button>
+    ),
+}));
+
+vi.mock('../components/ui/badge', () => ({
+    Badge: ({ children, ...props }: any) => <span data-testid="badge" {...props}>{children}</span>,
+}));
+
+const mockUser = {
+    id: '123',
+    email: 'test@example.com',
+    full_name: 'Test User',
+    is_active: true,
+    created_at: '2024-01-01T00:00:00Z',
+};
 
 describe('DashboardPage', () => {
-    const mockLogout = vi.fn();
-    const mockFetchUser = vi.fn();
-
     beforeEach(() => {
         vi.clearAllMocks();
-    });
-
-    it('should render dashboard with user data', () => {
         vi.mocked(useAuthStore).mockReturnValue({
             isAuthenticated: true,
             token: 'mock-token',
-            user: {
-                id: '123',
-                email: 'test@example.com',
-                full_name: 'Test User',
-                is_active: true,
-                created_at: '2024-01-01T00:00:00Z',
-            },
+            user: mockUser,
             isLoading: false,
             error: null,
             login: vi.fn(),
             register: vi.fn(),
-            logout: mockLogout,
-            fetchUser: mockFetchUser,
+            logout: vi.fn(),
+            fetchUser: vi.fn(),
+            clearError: vi.fn(),
+        });
+    });
+
+    it('should render dashboard with user full name', async () => {
+        render(
+            <BrowserRouter>
+                <DashboardPage />
+            </BrowserRouter>
+        );
+
+        await waitFor(() => {
+            expect(screen.getByText(/Welcome back, Test User!/i)).toBeInTheDocument();
+        });
+    });
+
+    it('should render dashboard with email when no full name', async () => {
+        vi.mocked(useAuthStore).mockReturnValue({
+            isAuthenticated: true,
+            token: 'mock-token',
+            user: { ...mockUser, full_name: null },
+            isLoading: false,
+            error: null,
+            login: vi.fn(),
+            register: vi.fn(),
+            logout: vi.fn(),
+            fetchUser: vi.fn(),
             clearError: vi.fn(),
         });
 
@@ -48,91 +99,35 @@ describe('DashboardPage', () => {
             </BrowserRouter>
         );
 
-        expect(screen.getByText('Test User')).toBeInTheDocument();
-        expect(screen.getByText('test@example.com')).toBeInTheDocument();
+        await waitFor(() => {
+            expect(screen.getByText(/Welcome back, test@example.com!/i)).toBeInTheDocument();
+        });
     });
 
-    it('should fetch user on mount', () => {
-        vi.mocked(useAuthStore).mockReturnValue({
-            isAuthenticated: true,
-            token: 'mock-token',
-            user: null,
-            isLoading: false,
-            error: null,
-            login: vi.fn(),
-            register: vi.fn(),
-            logout: mockLogout,
-            fetchUser: mockFetchUser,
-            clearError: vi.fn(),
-        });
-
+    it('should display workflow stats cards', async () => {
         render(
             <BrowserRouter>
                 <DashboardPage />
             </BrowserRouter>
         );
 
-        expect(mockFetchUser).toHaveBeenCalled();
+        await waitFor(() => {
+            expect(screen.getByText('Total Workflows')).toBeInTheDocument();
+            expect(screen.getByText('Active Deployments')).toBeInTheDocument();
+            expect(screen.getByText('Total Executions')).toBeInTheDocument();
+        });
     });
 
-    it('should handle logout', () => {
-        vi.mocked(useAuthStore).mockReturnValue({
-            isAuthenticated: true,
-            token: 'mock-token',
-            user: {
-                id: '123',
-                email: 'test@example.com',
-                full_name: 'Test User',
-                is_active: true,
-                created_at: '2024-01-01T00:00:00Z',
-            },
-            isLoading: false,
-            error: null,
-            login: vi.fn(),
-            register: vi.fn(),
-            logout: mockLogout,
-            fetchUser: mockFetchUser,
-            clearError: vi.fn(),
-        });
-
+    it('should display create workflow button', async () => {
         render(
             <BrowserRouter>
                 <DashboardPage />
             </BrowserRouter>
         );
 
-        const logoutButton = screen.getByRole('button', { name: /logout/i });
-        fireEvent.click(logoutButton);
-
-        expect(mockLogout).toHaveBeenCalled();
-    });
-
-    it('should display user without full name', () => {
-        vi.mocked(useAuthStore).mockReturnValue({
-            isAuthenticated: true,
-            token: 'mock-token',
-            user: {
-                id: '123',
-                email: 'test@example.com',
-                full_name: null,
-                is_active: true,
-                created_at: '2024-01-01T00:00:00Z',
-            },
-            isLoading: false,
-            error: null,
-            login: vi.fn(),
-            register: vi.fn(),
-            logout: mockLogout,
-            fetchUser: mockFetchUser,
-            clearError: vi.fn(),
+        await waitFor(() => {
+            const buttons = screen.getAllByText('Create Workflow');
+            expect(buttons.length).toBeGreaterThan(0);
         });
-
-        render(
-            <BrowserRouter>
-                <DashboardPage />
-            </BrowserRouter>
-        );
-
-        expect(screen.getByText('test@example.com')).toBeInTheDocument();
     });
 });

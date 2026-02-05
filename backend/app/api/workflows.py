@@ -4,7 +4,7 @@ from typing import List
 from app.db.database import get_db
 from app.models.workflow import Workflow
 from app.models.user import User
-from app.schemas.workflow_schemas import WorkflowCreate, WorkflowUpdate, WorkflowResponse
+from app.schemas.workflow_schemas import WorkflowCreate, WorkflowUpdate, WorkflowResponse, WorkflowExecutionRequest, WorkflowExecutionResponse
 from app.api.auth import get_current_user
 
 router = APIRouter(prefix="/workflows", tags=["Workflows"])
@@ -114,3 +114,57 @@ async def delete_workflow(
     db.commit()
     
     return None
+
+@router.post("/{workflow_id}/execute", response_model=WorkflowExecutionResponse)
+async def execute_workflow(
+    workflow_id: str,
+    execution_request: WorkflowExecutionRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Execute a workflow"""
+    from app.core.executor import GraphExecutor
+    
+    workflow = db.query(Workflow).filter(
+        Workflow.id == workflow_id,
+        Workflow.user_id == str(current_user.id)
+    ).first()
+    
+    if not workflow:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Workflow not found"
+        )
+    
+    # Extract nodes and edges from canvas_state
+    # canvas_state format depends on ReactFlow. Usually has 'nodes' and 'edges' lists.
+    canvas_state = workflow.canvas_state or {}
+    nodes = canvas_state.get('nodes', [])
+    edges = canvas_state.get('edges', [])
+    
+    if not nodes:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Workflow has no nodes to execute"
+        )
+        
+    executor = GraphExecutor()
+    try:
+        execution_result = await executor.execute(
+            nodes=nodes,
+            edges=edges,
+            initial_inputs=execution_request.initial_inputs
+        )
+        
+        return {
+            "workflow_id": workflow_id,
+            "status": "success",
+            "results": execution_result.get("results", {}),
+            "logs": execution_result.get("logs", [])
+        }
+    except Exception as e:
+        # In case of overall execution failure (e.g. cycle detected)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )

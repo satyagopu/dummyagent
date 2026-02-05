@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from datetime import datetime
 
 class WorkflowCreate(BaseModel):
@@ -28,3 +28,14 @@ class WorkflowResponse(BaseModel):
     
     class Config:
         from_attributes = True
+
+class WorkflowExecutionRequest(BaseModel):
+    """Schema for executing a workflow"""
+    initial_inputs: Optional[Dict[str, Any]] = None
+
+class WorkflowExecutionResponse(BaseModel):
+    """Schema for execution results"""
+    workflow_id: str
+    status: str
+    results: Dict[str, Any]
+    logs: List[Dict[str, Any]]

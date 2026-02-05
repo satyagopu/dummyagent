@@ -28,6 +28,8 @@ jobs:
       
       - name: Run tests with coverage
         working-directory: ./backend
+        env:
+          PYTHONPATH: ${{ github.workspace }}/backend
         run: pytest --cov=app --cov-report=term --cov-report=xml
       
       - name: Security audit - pip-audit

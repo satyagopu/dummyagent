@@ -25,7 +25,7 @@ const initialNodes: Node[] = [
 ];
 
 export default function WorkflowEditorPage() {
-    const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+    const [nodes, _setNodes, onNodesChange] = useNodesState(initialNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 
     const onConnect = useCallback(

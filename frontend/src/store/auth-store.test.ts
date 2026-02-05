@@ -4,8 +4,12 @@ import { useAuthStore } from '../store/auth-store';
 import axios from 'axios';
 
 // Mock axios
-vi.mock('axios');
-const mockedAxios = vi.mocked(axios);
+vi.mock('axios', () => ({
+    default: {
+        post: vi.fn(),
+        get: vi.fn(),
+    },
+}));
 
 describe('Auth Store', () => {
     beforeEach(() => {
@@ -31,12 +35,12 @@ describe('Auth Store', () => {
                 created_at: '2024-01-01T00:00:00Z',
             };
 
-            mockedAxios.post.mockResolvedValueOnce({
+            vi.mocked(axios.post).mockResolvedValueOnce({
                 data: { access_token: mockToken, token_type: 'bearer' },
-            });
-            mockedAxios.get.mockResolvedValueOnce({
+            } as any);
+            vi.mocked(axios.get).mockResolvedValueOnce({
                 data: mockUser,
-            });
+            } as any);
 
             const { result } = renderHook(() => useAuthStore());
 
@@ -51,9 +55,9 @@ describe('Auth Store', () => {
         });
 
         it('should handle registration error', async () => {
-            mockedAxios.post.mockRejectedValueOnce({
+            vi.mocked(axios.post).mockRejectedValueOnce({
                 response: { data: { detail: 'Email already registered' } },
-            });
+            } as any);
 
             const { result } = renderHook(() => useAuthStore());
 
@@ -84,12 +88,12 @@ describe('Auth Store', () => {
                 created_at: '2024-01-01T00:00:00Z',
             };
 
-            mockedAxios.post.mockResolvedValueOnce({
+            vi.mocked(axios.post).mockResolvedValueOnce({
                 data: { access_token: mockToken, token_type: 'bearer' },
-            });
-            mockedAxios.get.mockResolvedValueOnce({
+            } as any);
+            vi.mocked(axios.get).mockResolvedValueOnce({
                 data: mockUser,
-            });
+            } as any);
 
             const { result } = renderHook(() => useAuthStore());
 
@@ -103,9 +107,9 @@ describe('Auth Store', () => {
         });
 
         it('should handle login error', async () => {
-            mockedAxios.post.mockRejectedValueOnce({
+            vi.mocked(axios.post).mockRejectedValueOnce({
                 response: { data: { detail: 'Incorrect email or password' } },
-            });
+            } as any);
 
             const { result } = renderHook(() => useAuthStore());
 
@@ -157,7 +161,7 @@ describe('Auth Store', () => {
                 created_at: '2024-01-01T00:00:00Z',
             };
 
-            mockedAxios.get.mockResolvedValueOnce({
+            vi.mocked(axios.get).mockResolvedValueOnce({
                 data: mockUser,
             });
 
@@ -175,7 +179,7 @@ describe('Auth Store', () => {
         });
 
         it('should clear auth on fetch error', async () => {
-            mockedAxios.get.mockRejectedValueOnce(new Error('Unauthorized'));
+            vi.mocked(axios.get).mockRejectedValueOnce(new Error('Unauthorized'));
 
             const { result } = renderHook(() => useAuthStore());
 

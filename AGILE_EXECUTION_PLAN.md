@@ -542,25 +542,82 @@ Users can sign up and log in securely
 
 ---
 
-## 🎯 PHASE 3: Canvas & Workflow Management (Week 5-6)
+## 🎯 PHASE 3: Modern UI & Canvas Foundation (Week 5-7)
 
 ### Goal
-Visual canvas where users can create and save workflows
+Transform the app with beautiful, premium UI and add workflow canvas
 
 ### What You'll Build
-- Dashboard with workflow list
-- ReactFlow canvas (empty for now)
+- **Modern UI Design System** - Premium visual experience
+- Dashboard with gradient backgrounds & glass morphism
+- Beautiful workflow list with card-based layouts
+- ReactFlow canvas with animations
 - CRUD operations for workflows
 - Workflow persistence
 
+### UI Transformation (NEW!)
+**Install UI Libraries:**
+```bash
+# shadcn/ui components
+npx shadcn@latest init
+npx shadcn@latest add button card input badge tabs dialog dropdown-menu popover tooltip
+
+# Animation & Icons
+npm install framer-motion lucide-react
+
+# Forms & Notifications
+npm install react-hook-form @hookform/resolvers zod sonner
+
+# State Management
+npm install zustand
+```
+
+**Design System Elements:**
+- ✨ Gradient backgrounds on all pages (`bg-gradient-to-br from-primary/5 via-background to-secondary/5`)
+- 🎨 Glass morphism effects (`bg-background/80 backdrop-blur-sm`)
+- 🎭 Framer Motion page transitions (smooth fade-ins, staggered cards)
+- 🎯 Status color coding (blue=active, green=success, red=error)
+- 📐 Card-based layouts with subtle shadows
+- 🎪 Toast notifications for all user feedback
+- 💎 Lucide icons throughout the UI
+
+**Canvas-Specific UI:**
+- Node palette sidebar with categorized nodes
+- Drag-and-drop nodes with spring animations
+- Connection lines with smooth curves
+- Active node highlight during execution (pulsing blue glow)
+- Minimap for large workflows
+- Zoom controls with smooth transitions
+
 ### Key Features
-- Database: Workflows table
-- API: Create, read, update, delete workflows
-- Frontend: Canvas editor with ReactFlow
+- **Database:** Workflows table (id, name, description, canvas_state, created_at, updated_at)
+- **API:** Full CRUD for workflows
+- **Frontend:**
+  - Dashboard with animated workflow cards
+  - ReactFlow canvas with modern styling
+  - Node palette with beautiful icons
+  - Status badges for workflow states
+  - Empty states with helpful prompts
 
-**📄 Detailed Guide:** Create `phases/phase3.md` when starting
+### Implementation Checklist
+- [ ] Install all UI libraries (shadcn/ui, Framer Motion, etc.)
+- [ ] Set up Tailwind color system (HSL variables)
+- [ ] Update all pages with gradient backgrounds
+- [ ] Add backdrop blur to header
+- [ ] Create animated dashboard
+- [ ] Build workflow CRUD API
+- [ ] Integrate ReactFlow canvas
+- [ ] Style nodes with glass effect
+- [ ] Add Framer Motion transitions
+- [ ] Implement toast notifications
+- [ ] Add loading/empty states
+- [ ] Test dark mode
+- [ ] Ensure mobile responsiveness
 
-**Time:** 2 weeks
+**📄 Detailed Guide:** Create `phases/phase3.md` when starting  
+**📖 Design Reference:** See `UI_DESIGN_SYSTEM.md` for patterns
+
+**Time:** 3 weeks (extra week for UI polish)
 
 ---
 

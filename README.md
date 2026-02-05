@@ -10,6 +10,7 @@
 AgentWeave is a production-ready platform for building, testing, and deploying AI agent workflows. Think of it as **n8n, but specifically designed for AI agents**.
 
 ### Key Features
+- ✨ **Beautiful Modern UI** - Premium design with glass morphism, gradients, smooth animations
 - 🎨 **Visual Workflow Builder** - Drag-and-drop canvas for creating AI workflows
 - 🤖 **LangChain & LangGraph Native** - Full support for AI agent orchestration
 - 🔌 **MCP Integration** - Model Context Protocol for external tools
@@ -47,8 +48,15 @@ AgentWeave is a production-ready platform for building, testing, and deploying A
 ### Frontend
 - **Build Tool:** Vite (fast, modern)
 - **Framework:** React 18 + TypeScript
+- **UI Design:** Premium modern design system
+  - shadcn/ui components (Radix UI)
+  - Tailwind CSS with custom tokens
+  - Framer Motion animations
+  - Lucide React icons
+  - Glass morphism & gradients
 - **State:** Zustand (Phase 3+)
-- **Styling:** Tailwind CSS (Phase 3+)
+- **Forms:** React Hook Form + Zod
+- **Notifications:** Sonner (toast)
 - **Testing:** Vitest (92% coverage)
 - **Error Handling:** Error Boundaries
 
@@ -237,6 +245,7 @@ npm audit           # Dependency vulnerabilities
 
 - **Requirements:** See `SMARTBOTS_REQUIREMENTS.md`
 - **Development Plan:** See `AGILE_EXECUTION_PLAN.md`
+- **UI Design System:** See `UI_DESIGN_SYSTEM.md` ✨ (Beautiful, modern UI patterns)
 - **Phase Guides:** See `phases/phase1.md`, `phases/phase2.md`, etc.
 - **API Docs:** http://localhost:8000/docs (when backend running)
 

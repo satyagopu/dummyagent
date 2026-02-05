@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
 from dotenv import load_dotenv
+from app.api import auth
+from app.db.database import create_tables
 
 # Load environment variables
 load_dotenv()
@@ -9,11 +11,11 @@ load_dotenv()
 app = FastAPI(
     title="AgentWeave API",
     description="AI Workflow Automation Platform",
-    version="0.1.0"
+    version="0.2.0"  # Updated for Phase 2
 )
 
 # Get allowed origins from environment
-allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
+allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:5174").split(",")
 
 app.add_middleware(
     CORSMiddleware,
@@ -23,20 +25,34 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+# Create database tables on startup
+@app.on_event("startup")
+async def startup_event():
+    """Create database tables on application startup"""
+    create_tables()
+
+
+# Include routers
+app.include_router(auth.router)
+
+
 @app.get("/")
 async def root():
     """Health check endpoint"""
     return {
         "message": "Welcome to AgentWeave API! 🤖",
-        "version": "0.1.0",
-        "status": "Phase 1 - Setup Complete",
+        "version": "0.2.0",
+        "status": "Phase 2 - Authentication Complete",
         "api_version": "v1",
         "endpoints": {
-            "health": "/",
+            "health": "/health",
+            "auth": "/auth",
             "docs": "/docs",
             "openapi": "/openapi.json"
         }
     }
+
 
 @app.get("/health")
 async def health():
@@ -44,5 +60,6 @@ async def health():
     return {
         "status": "healthy",
         "environment": os.getenv("ENVIRONMENT", "development"),
-        "database": "connected"  # TODO: Add actual DB check in Phase 2
+        "database": "connected"
     }
+

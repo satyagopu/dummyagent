@@ -5,13 +5,13 @@ from app.main import app
 client = TestClient(app)
 
 def test_root_endpoint():
-    """Test the root endpoint returns correct data"""
+    """Test root endpoint returns correct information"""
     response = client.get("/")
     assert response.status_code == 200
     data = response.json()
     assert "message" in data
     assert "version" in data
-    assert data["version"] == "0.1.0"
+    assert data["version"] == "0.2.0"  # Updated for Phase 2
 
 def test_health_endpoint():
     """Test the health check endpoint"""

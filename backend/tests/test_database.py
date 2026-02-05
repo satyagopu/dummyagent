@@ -1,7 +1,7 @@
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from app.db.database import Base, get_db
+from app.db.database import Base, get_db, create_tables
 
 def test_database_connection():
     """Test database connection and session creation"""
@@ -33,3 +33,14 @@ def test_get_db_generator():
         next(db_generator)
     except StopIteration:
         pass  # Expected behavior
+
+def test_create_tables():
+    """Test the create_tables function"""
+    # This function should execute without errors
+    # It creates all tables defined in Base.metadata
+    try:
+        create_tables()
+        # If we get here, the function executed successfully
+        assert True
+    except Exception as e:
+        pytest.fail(f"create_tables() raised an exception: {e}")

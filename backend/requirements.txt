@@ -1,0 +1,26 @@
+# AgentWeave Backend Dependencies
+# Phase 1: Basic Setup
+
+# Web Framework
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.5
+pydantic-settings==2.7.1
+
+# Database
+sqlalchemy==2.0.36
+
+# CORS and middleware
+python-multipart==0.0.22
+
+# Security
+python-dotenv==1.0.1
+
+# Testing
+pytest==7.4.4
+pytest-cov==4.1.0
+httpx==0.26.0
+
+# Security auditing (dev)
+pip-audit==2.7.0
+bandit==1.7.6

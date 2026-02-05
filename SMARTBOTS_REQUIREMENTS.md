@@ -2365,11 +2365,18 @@ All PRs must pass:
 ### 5.1 Technology Stack (Proposed)
 
 #### Frontend
-- **Framework:** React + TypeScript
+- **Framework:** React 18 + TypeScript (Vite build tool)
 - **Canvas Library:** ReactFlow or Rete.js
-- **UI Components:** Tailwind CSS + shadcn/ui
-- **State Management:** Zustand or Redux Toolkit
-- **API Client:** React Query
+- **UI Design System:** Modern, premium UI with glass morphism
+  - **Component Library:** shadcn/ui (Radix UI primitives)
+  - **Styling:** Tailwind CSS with custom design tokens
+  - **Animations:** Framer Motion for smooth transitions
+  - **Icons:** Lucide React (consistent, beautiful icons)
+  - **Forms:** React Hook Form + Zod validation
+  - **Notifications:** Sonner (toast notifications)
+- **State Management:** Zustand (Phase 3+)
+- **API Client:** Axios (Phase 1), React Query (Phase 3+)
+- **Design Approach:** Card-based layouts, gradient backgrounds, status color coding
 
 #### Backend
 - **API Framework:** FastAPI (Python) or NestJS (Node.js)

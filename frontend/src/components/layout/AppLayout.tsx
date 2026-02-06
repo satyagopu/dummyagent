@@ -63,9 +63,11 @@ export default function AppLayout() {
                             <DropdownMenuContent align="end" className="w-56">
                                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem>
-                                    <Settings className="mr-2 h-4 w-4" />
-                                    Settings
+                                <DropdownMenuItem asChild>
+                                    <Link to="/settings" className="flex items-center cursor-pointer">
+                                        <Settings className="mr-2 h-4 w-4" />
+                                        Settings
+                                    </Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem onClick={handleLogout}>

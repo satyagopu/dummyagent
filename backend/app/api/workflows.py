@@ -6,8 +6,14 @@ from app.models.workflow import Workflow
 from app.models.user import User
 from app.schemas.workflow_schemas import WorkflowCreate, WorkflowUpdate, WorkflowResponse, WorkflowExecutionRequest, WorkflowExecutionResponse
 from app.api.auth import get_current_user
+from app.services.tool_service import tool_service
 
 router = APIRouter(prefix="/workflows", tags=["Workflows"])
+
+@router.get("/tools")
+def list_tools():
+    """List all available tools."""
+    return tool_service.get_available_tools()
 
 @router.post("/", response_model=WorkflowResponse, status_code=status.HTTP_201_CREATED)
 async def create_workflow(
@@ -156,12 +162,30 @@ async def execute_workflow(
             detail="Workflow has no nodes to execute"
         )
         
+    # Fetch and decrypt User Credentials
+    from app.models.credential import UserCredential
+    from app.services.encryption import get_encryption_service
+    
+    user_creds = db.query(UserCredential).filter(UserCredential.user_id == str(current_user.id)).all()
+    encryption_service = get_encryption_service()
+    
+    user_api_keys = {}
+    for cred in user_creds:
+        if cred.is_active:
+            try:
+                decrypted = encryption_service.decrypt(cred.api_key_encrypted)
+                if decrypted:
+                    user_api_keys[cred.provider] = decrypted
+            except Exception:
+                pass
+
     executor = GraphExecutor()
     try:
         execution_result = await executor.execute(
             nodes=nodes,
             edges=edges,
-            initial_inputs=execution_request.initial_inputs
+            initial_inputs=execution_request.initial_inputs,
+            user_api_keys=user_api_keys
         )
         
         return {

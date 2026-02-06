@@ -638,7 +638,24 @@ Add working LLM node that actually calls APIs
 
 ---
 
-## 🎯 PHASE 5: Credentials Management (Week 10-11)
+## 🎯 PHASE 5: Advanced Tooling & Custom Nodes (Week 10-11)
+
+### Goal
+Expand capabilities with Tools and Custom Nodes
+
+### What You'll Build
+- Tool Registry (Search, Calculator)
+- Tool Node Component
+- Custom Node (User-defined inputs/outputs)
+- Agent Node (ReAct pattern)
+
+**📄 Detailed Guide:** Create `phases/phase5.md` when starting
+
+**Time:** 2 weeks
+
+---
+
+## 🎯 PHASE 6: Credentials Management (Week 12-13)
 
 ### Goal
 Securely store API keys
@@ -654,7 +671,7 @@ Securely store API keys
 
 ---
 
-## 🎯 PHASE 6: More Basic Nodes (Week 12-14)
+## 🎯 PHASE 7: More Basic Nodes (Week 14-16)
 
 ### Goal
 Add HTTP, If/Else, Variable nodes
@@ -671,7 +688,7 @@ Add HTTP, If/Else, Variable nodes
 
 ---
 
-## 🎯 PHASE 7: Execution Logs (Week 15-16)
+## 🎯 PHASE 8: Execution Logs (Week 17-18)
 
 ### Goal
 See what happened during execution

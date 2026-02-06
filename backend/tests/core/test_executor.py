@@ -18,7 +18,8 @@ async def test_topological_execution():
     executor = GraphExecutor()
     
     # Mock processing
-    executor._process_node = AsyncMock(side_effect=lambda type, data, inputs, context: f"processed_{inputs.get('input', 'none')}")
+    # Mock processing - Update signature to include user_api_keys
+    executor._process_node = AsyncMock(side_effect=lambda type, data, inputs, context, user_api_keys=None: f"processed_{inputs.get('input', 'none')}")
     
     result = await executor.execute(nodes, edges)
     

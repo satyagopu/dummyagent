@@ -1,6 +1,45 @@
-from typing import List, Dict, Any, Set
+from typing import List, Dict, Any, Set, Optional
 from collections import deque
+import logging
 from app.services.llm_service import get_llm_service
+from app.services.tool_service import tool_service
+from langchain.agents import create_react_agent, AgentExecutor
+from langchain_core.prompts import PromptTemplate
+from langchain_google_genai import ChatGoogleGenerativeAI
+
+logger = logging.getLogger(__name__)
+
+# Lazy imports placeholders or handle inside methods if strict lazy loading needed, 
+# but for now we put imports at top for cleanliness, wrapping optional ones.
+try:
+    from langchain_openai import ChatOpenAI
+except ImportError:
+    ChatOpenAI = None
+try:
+    from langchain_anthropic import ChatAnthropic
+except ImportError:
+    ChatAnthropic = None
+
+REACT_PROMPT_TEMPLATE = """Answer the following questions as best you can. You have access to the following tools:
+
+{tools}
+
+Use the following format:
+
+Question: the input question you must answer
+Thought: you should always think about what to do
+Action: the action to take, should be one of [{tool_names}]
+Action Input: the input to the action
+Observation: the result of the action
+... (this Thought/Action/Action Input/Observation can repeat N times)
+Thought: I now know the final answer
+Final Answer: the final answer to the original input question
+
+Begin!
+
+System: {system_message}
+Question: {input}
+Thought:{agent_scratchpad}"""
 
 class GraphExecutor:
     def __init__(self):
@@ -100,44 +139,21 @@ class GraphExecutor:
         """Process a single node based on its type."""
         
         if node_type == 'input':
-            # Input nodes just pass through their configuration or initial inputs
             return {**data, **context.get('initial_inputs', {})}
             
         elif node_type == 'llm':
-            # Construct prompt from inputs + system prompt
-            system_prompt = data.get('system_prompt', 'You are a helpful assistant.')
-            user_prompt = inputs.get('prompt') or inputs.get('input') or data.get('prompt') or "Hello!"
-            
-            # Simple template substitution if needed (e.g., "Hello {name}")
-            # For now, just append inputs if they simplify things
-            
-            model = data.get('model', 'gemini-pro')
-            temperature = float(data.get('temperature', 0.7))
-            
-            response = await self.llm_service.generate_text(
-                prompt=user_prompt,
-                system_prompt=system_prompt,
-                model_name=model,
-                temperature=temperature
-            )
-            return {"generated_text": response}
+            return await self._process_llm_node(data, inputs)
             
         elif node_type == 'output':
             # Output nodes just capture the final state
             return inputs
             
-        elif node_type == 'tool':
-            # Execute a tool
-            tool_name = data.get('tool')
-            input_data = inputs.get('input') or inputs.get('query') or inputs.get('expression') or " "
-            
-            if not tool_name:
-                raise ValueError("Tool node missing 'tool' name configuration")
-                
-            from app.services.tool_service import tool_service
-            output = tool_service.execute_tool(tool_name, str(input_data))
-            return {"output": output}
+        elif node_type == 'agent':
+            return await self._process_agent_node(data, inputs)
 
+        elif node_type == 'tool':
+            return self._process_tool_node(data, inputs)
+            
         elif node_type == 'end':
             # End node - semantically same as output, just stops the branch
             return inputs
@@ -145,3 +161,87 @@ class GraphExecutor:
         else:
             # Pass-through for unknown nodes
             return inputs
+
+    async def _process_llm_node(self, data: Dict, inputs: Dict) -> Dict:
+        """Handle LLM Node execution."""
+        system_prompt = data.get('system_prompt', 'You are a helpful assistant.')
+        user_prompt = inputs.get('prompt') or inputs.get('input') or inputs.get('value') or data.get('prompt') or "Hello!"
+        
+        model = data.get('model', 'gemini-pro')
+        temperature = float(data.get('temperature', 0.7))
+        
+        response = await self.llm_service.generate_text(
+            prompt=user_prompt,
+            system_prompt=system_prompt,
+            model_name=model,
+            temperature=temperature
+        )
+        return {"generated_text": response}
+
+    async def _process_agent_node(self, data: Dict, inputs: Dict) -> Dict:
+        """Handle Agent Node execution with ReAct loop."""
+        # 1. Get configuration
+        system_prompt = data.get('system_prompt', 'You are a helpful AI assistant.')
+        model_name = data.get('model', 'gemini-1.5-pro')
+        selected_tool_names = data.get('tools', [])
+        
+        # 2. Prepare Tools
+        tools = []
+        for name in selected_tool_names:
+            tool = tool_service.get_tool(name)
+            if tool:
+                tools.append(tool)
+        
+        # 3. Initialize LLM
+        llm = self._initialize_llm(model_name)
+
+        # 4. Construct Prompt
+        prompt = PromptTemplate.from_template(REACT_PROMPT_TEMPLATE)
+        
+        # 5. Create Agent
+        try:
+            agent = create_react_agent(llm, tools, prompt)
+            agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True, handle_parsing_errors=True)
+            
+            # 6. Execute
+            input_text = inputs.get('input') or inputs.get('query') or inputs.get('value') or " "
+            
+            result = await agent_executor.ainvoke({
+                "input": input_text,
+                "system_message": system_prompt
+            })
+            output_text = result.get('output', str(result))
+            return {"output": output_text, "generated_text": output_text}
+        except Exception as e:
+            logger.error(f"Agent execution failed: {e}")
+            return {"output": f"Agent Error: {str(e)}", "error": str(e)}
+
+    def _process_tool_node(self, data: Dict, inputs: Dict) -> Dict:
+        """Handle Tool Node execution."""
+        tool_name = data.get('tool')
+        input_data = inputs.get('input') or inputs.get('query') or inputs.get('expression') or inputs.get('value') or " "
+        
+        if not tool_name:
+            raise ValueError("Tool node missing 'tool' name configuration")
+            
+        output = tool_service.execute_tool(tool_name, str(input_data))
+        return {"output": output}
+
+    def _initialize_llm(self, model_name: str):
+        """Helper to initialize the correct LLM backend based on model name."""
+        if "gpt" in model_name:
+            if ChatOpenAI:
+                 return ChatOpenAI(model=model_name, temperature=0, api_key=None) # Rely on env
+            logger.warning("langchain_openai not installed or failed to import, fallback to Gemini")
+
+        if "claude" in model_name:
+             if ChatAnthropic:
+                return ChatAnthropic(model=model_name, temperature=0, api_key=None)
+        
+        # Default to Gemini
+        api_model_name = "gemini-1.5-pro"
+        if "gemini" in model_name: 
+            api_model_name = "gemini-1.5-pro"
+        
+        return ChatGoogleGenerativeAI(model=api_model_name, temperature=0)
+

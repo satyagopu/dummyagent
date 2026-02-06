@@ -11,7 +11,7 @@ load_dotenv()
 app = FastAPI(
     title="AgentWeave API",
     description="AI Workflow Automation Platform",
-    version="0.3.0"  # Updated for Phase 3
+    version="0.5.0"
 )
 
 # Get allowed origins from environment
@@ -43,8 +43,8 @@ async def root():
     """Health check endpoint"""
     return {
         "message": "Welcome to AgentWeave API! 🤖",
-        "version": "0.3.0",
-        "status": "Phase 3 - Modern UI & Canvas Foundation",
+        "version": "0.5.0",
+        "status": "Phase 5 - Advanced Agents & Tooling",
         "api_version": "v1",
         "endpoints": {
             "health": "/health",

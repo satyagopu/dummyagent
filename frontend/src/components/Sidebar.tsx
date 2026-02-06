@@ -4,7 +4,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { X, Trash2 } from 'lucide-react';
+import { Trash2, X, Settings2 } from 'lucide-react';
+import { useAuthStore } from '@/store/auth-store';
+import { useEffect, useState } from 'react';
+import axios from 'axios';
 
 interface SidebarProps {
     selectedNode: any;
@@ -14,16 +17,35 @@ interface SidebarProps {
 }
 
 export function Sidebar({ selectedNode, setNodes, nodes, onClose }: SidebarProps) {
+    const [availableTools, setAvailableTools] = useState<any[]>([]);
+    const { token } = useAuthStore();
+
+    useEffect(() => {
+        if (selectedNode?.type === 'agent') {
+            const fetchTools = async () => {
+                try {
+                    const response = await axios.get('http://localhost:8000/api/workflows/tools', {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    setAvailableTools(response.data);
+                } catch (error) {
+                    console.error("Failed to fetch tools", error);
+                }
+            };
+            fetchTools();
+        }
+    }, [selectedNode?.type, token]);
+
     if (!selectedNode) return null;
 
-    const handleChange = (key: string, value: any) => {
+    const handleChange = (field: string, value: any) => {
         setNodes(nodes.map(node => {
             if (node.id === selectedNode.id) {
                 return {
                     ...node,
                     data: {
                         ...node.data,
-                        [key]: value
+                        [field]: value
                     }
                 };
             }
@@ -202,6 +224,69 @@ export function Sidebar({ selectedNode, setNodes, nodes, onClose }: SidebarProps
                                     </Button>
                                 </div>
                             ))}
+                            {(selectedNode.data.outputs || []).length === 0 && (
+                                <p className="text-xs text-muted-foreground italic">No outputs defined.</p>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {selectedNode.type === 'agent' && (
+                <div className="space-y-4">
+                    <div className="space-y-2">
+                        <Label>Model</Label>
+                        <Select
+                            value={selectedNode.data.model || 'gemini-pro'}
+                            onValueChange={(value) => handleChange('model', value)}
+                        >
+                            <SelectTrigger>
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="gemini-pro">Gemini Pro</SelectItem>
+                                <SelectItem value="gpt-4">GPT-4</SelectItem>
+                                <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
+                                <SelectItem value="claude-3-opus">Claude 3 Opus</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>System Prompt</Label>
+                        <Textarea
+                            value={selectedNode.data.system_prompt || ''}
+                            onChange={(e) => handleChange('system_prompt', e.target.value)}
+                            placeholder="You are a helpful AI assistant..."
+                            className="h-24 font-mono text-xs"
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>Enabled Tools</Label>
+                        <div className="grid grid-cols-2 gap-2 bg-muted/20 p-2 rounded-md border">
+                            {availableTools.map((tool) => {
+                                const isSelected = (selectedNode.data.tools || []).includes(tool.name);
+                                return (
+                                    <div
+                                        key={tool.name}
+                                        className={`flex items-center gap-2 p-2 rounded cursor-pointer border text-xs transition-colors ${isSelected ? 'bg-primary/10 border-primary' : 'bg-card border-transparent hover:border-border'}`}
+                                        onClick={() => {
+                                            const currentTools = selectedNode.data.tools || [];
+                                            const newTools = isSelected
+                                                ? currentTools.filter((t: string) => t !== tool.name)
+                                                : [...currentTools, tool.name];
+                                            handleChange('tools', newTools);
+                                        }}
+                                    >
+                                        <div className={`w-3 h-3 rounded-full border ${isSelected ? 'bg-primary border-primary' : 'border-muted-foreground'}`} />
+                                        <span>{tool.name}</span>
+                                    </div>
+                                );
+                            })}
+                            {availableTools.length === 0 && (
+                                <div className="col-span-2 text-center text-xs text-muted-foreground py-2">Loading tools...</div>
+                            )}
                         </div>
                     </div>
                 </div>

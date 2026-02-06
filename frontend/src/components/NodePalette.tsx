@@ -1,4 +1,4 @@
-import { Terminal, MousePointerClick, Settings2 } from "lucide-react";
+import { Terminal, MousePointerClick, Settings2, Bot } from "lucide-react";
 
 export const NodePalette = () => {
     const onDragStart = (event: React.DragEvent, nodeType: string) => {
@@ -61,6 +61,17 @@ export const NodePalette = () => {
                     <div className="h-2 w-2 rounded-sm bg-destructive" />
                 </div>
                 <span className="text-sm text-destructive">End Node</span>
+            </div>
+
+            <div
+                className="flex items-center gap-2 p-2 rounded hover:bg-accent cursor-grab active:cursor-grabbing border border-transparent hover:border-border"
+                onDragStart={(event) => onDragStart(event, 'agent')}
+                draggable
+            >
+                <div className="h-4 w-4 rounded-full bg-purple-500/20 flex items-center justify-center">
+                    <Bot className="h-3 w-3 text-purple-600" />
+                </div>
+                <span className="text-sm font-medium text-purple-700">AI Agent</span>
             </div>
 
             <div

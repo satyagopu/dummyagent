@@ -1,17 +1,27 @@
 from typing import List, Dict, Any, Optional
+import logging
 from langchain_core.tools import Tool
 from langchain_community.tools import WikipediaQueryRun
 from langchain_community.utilities import WikipediaAPIWrapper
 from langchain_core.pydantic_v1 import BaseModel, Field
 
-# Defines a simple calculator tool since langchain's often requires extra dependencies
+logger = logging.getLogger(__name__)
+
 def calculator_func(input_str: str) -> str:
-    """Calculates a mathematical expression."""
+    """
+    Calculates a mathematical expression.
+    WARNING: Uses eval() - strictly for demonstration checks.
+    """
     try:
-        # Dangerous for production, but standard for simple calculator checks
-        # In a real app, use a safer eval or library
+        # In a production environment, use a library like 'numexpr' or 'simpleeval'
+        # to safely evaluate mathematical expressions.
+        # Check for obvious dangerous characters
+        if any(char in input_str for char in ['__', 'import', 'lambda']):
+            raise ValueError("Unsafe input detected")
+            
         return str(eval(input_str))
     except Exception as e:
+        logger.error(f"Calculator error for input '{input_str}': {e}")
         return f"Error calculating: {str(e)}"
 
 class ToolService:
@@ -40,11 +50,12 @@ class ToolService:
             )
             self.register_tool(wiki_tool)
         except Exception as e:
-            print(f"Failed to initialize Wikipedia tool: {e}")
+            logger.warning(f"Failed to initialize Wikipedia tool: {e}")
 
     def register_tool(self, tool: Tool):
         """Register a new tool."""
         self._tools[tool.name] = tool
+        logger.info(f"Registered tool: {tool.name}")
 
     def get_tool(self, name: str) -> Optional[Tool]:
         """Get a specific tool by name."""
@@ -65,11 +76,13 @@ class ToolService:
         """Execute a tool by name."""
         tool = self.get_tool(tool_name)
         if not tool:
+            logger.error(f"Tool not found: {tool_name}")
             raise ValueError(f"Tool '{tool_name}' not found")
         
         try:
             return tool.run(input_data)
         except Exception as e:
+            logger.error(f"Error executing tool {tool_name}: {e}")
             return f"Error executing tool {tool_name}: {str(e)}"
 
 # Singleton instance

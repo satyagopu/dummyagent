@@ -23,6 +23,7 @@ import LLMNode from '@/components/nodes/LLMNode';
 import InputNode from '@/components/nodes/InputNode';
 import OutputNode from '@/components/nodes/OutputNode';
 import ToolNode from '@/components/nodes/ToolNode';
+import AgentNode from '@/components/nodes/AgentNode';
 import EndNode from '@/components/nodes/EndNode';
 import CustomNode from '@/components/nodes/CustomNode';
 import { Sidebar } from '@/components/Sidebar';
@@ -31,6 +32,7 @@ import { NodePalette } from '@/components/NodePalette';
 
 const nodeTypes = {
     llm: LLMNode,
+    agent: AgentNode,
     input: InputNode,
     output: OutputNode,
     tool: ToolNode,

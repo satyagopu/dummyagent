@@ -22,7 +22,7 @@ def setup_database():
 
 def test_register_user():
     """Test user registration"""
-    response = client.post("/auth/register", json={
+    response = client.post("/api/auth/register", json={
         "email": "test@example.com",
         "password": "testpassword123",
         "full_name": "Test User"
@@ -36,13 +36,13 @@ def test_register_user():
 def test_register_duplicate_email():
     """Test duplicate email rejection"""
     # Register first user
-    client.post("/auth/register", json={
+    client.post("/api/auth/register", json={
         "email": "duplicate@example.com",
         "password": "password123"
     })
     
     # Try to register again with same email
-    response = client.post("/auth/register", json={
+    response = client.post("/api/auth/register", json={
         "email": "duplicate@example.com",
         "password": "password456"
     })
@@ -53,13 +53,13 @@ def test_register_duplicate_email():
 def test_login_success():
     """Test successful login"""
     # Register user
-    client.post("/auth/register", json={
+    client.post("/api/auth/register", json={
         "email": "login@example.com",
         "password": "password123"
     })
     
     # Login
-    response = client.post("/auth/login", json={
+    response = client.post("/api/auth/login", json={
         "email": "login@example.com",
         "password": "password123"
     })
@@ -71,13 +71,13 @@ def test_login_success():
 def test_login_wrong_password():
     """Test login with wrong password"""
     # Register user
-    client.post("/auth/register", json={
+    client.post("/api/auth/register", json={
         "email": "wrong@example.com",
         "password": "correctpassword"
     })
     
     # Try login with wrong password
-    response = client.post("/auth/login", json={
+    response = client.post("/api/auth/login", json={
         "email": "wrong@example.com",
         "password": "wrongpassword"
     })
@@ -86,7 +86,7 @@ def test_login_wrong_password():
 
 def test_login_nonexistent_user():
     """Test login with non-existent email"""
-    response = client.post("/auth/login", json={
+    response = client.post("/api/auth/login", json={
         "email": "nonexistent@example.com",
         "password": "password123"
     })
@@ -96,7 +96,7 @@ def test_login_nonexistent_user():
 def test_get_current_user():
     """Test getting current user info"""
     # Register and get token
-    reg_response = client.post("/auth/register", json={
+    reg_response = client.post("/api/auth/register", json={
         "email": "current@example.com",
         "password": "password123",
         "full_name": "Current User"
@@ -104,7 +104,7 @@ def test_get_current_user():
     token = reg_response.json()["access_token"]
     
     # Get user info
-    response = client.get("/auth/me", headers={
+    response = client.get("/api/auth/me", headers={
         "Authorization": f"Bearer {token}"
     })
     assert response.status_code == 200
@@ -118,13 +118,13 @@ def test_get_current_user():
 
 def test_get_me_without_token():
     """Test accessing protected route without token"""
-    response = client.get("/auth/me")
+    response = client.get("/api/auth/me")
     assert response.status_code == 403  # Forbidden
 
 
 def test_get_me_invalid_token():
     """Test accessing protected route with invalid token"""
-    response = client.get("/auth/me", headers={
+    response = client.get("/api/auth/me", headers={
         "Authorization": "Bearer invalid_token_here"
     })
     assert response.status_code == 401
@@ -133,7 +133,7 @@ def test_get_me_invalid_token():
 def test_password_hashing():
     """Test that passwords are hashed in database"""
     # Register user
-    client.post("/auth/register", json={
+    client.post("/api/auth/register", json={
         "email": "hash@example.com",
         "password": "mypassword123"
     })
@@ -150,7 +150,7 @@ def test_password_hashing():
 
 def test_register_short_password():
     """Test registration with password too short"""
-    response = client.post("/auth/register", json={
+    response = client.post("/api/auth/register", json={
         "email": "short@example.com",
         "password": "short"  # Less than 8 characters
     })
@@ -159,7 +159,7 @@ def test_register_short_password():
 
 def test_register_invalid_email():
     """Test registration with invalid email"""
-    response = client.post("/auth/register", json={
+    response = client.post("/api/auth/register", json={
         "email": "not-an-email",
         "password": "password123"
     })

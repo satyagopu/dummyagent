@@ -27,12 +27,12 @@ def db_session(setup_database):
 def auth_token():
     """Register a user and return access token"""
     email = "workflow_test@example.com"
-    client.post("/auth/register", json={
+    client.post("/api/auth/register", json={
         "email": email,
         "password": "password123",
         "full_name": "Workflow Tester"
     })
-    response = client.post("/auth/login", json={
+    response = client.post("/api/auth/login", json={
         "email": email,
         "password": "password123"
     })
@@ -45,7 +45,7 @@ def auth_headers(auth_token):
 # --- CRUD Tests ---
 
 def test_create_workflow(auth_headers):
-    response = client.post("/workflows/", json={
+    response = client.post("/api/workflows/", json={
         "name": "My First Workflow",
         "description": "A test workflow",
         "canvas_state": {"nodes": [], "edges": []}
@@ -59,9 +59,9 @@ def test_create_workflow(auth_headers):
 
 def test_get_workflows(auth_headers):
     # Ensure at least one exists
-    client.post("/workflows/", json={"name": "List Test", "canvas_state": {}}, headers=auth_headers)
+    client.post("/api/workflows/", json={"name": "List Test", "canvas_state": {}}, headers=auth_headers)
     
-    response = client.get("/workflows/", headers=auth_headers)
+    response = client.get("/api/workflows/", headers=auth_headers)
     assert response.status_code == 200
     data = response.json()
     assert isinstance(data, list)
@@ -69,25 +69,25 @@ def test_get_workflows(auth_headers):
 
 def test_get_workflow_by_id(auth_headers):
     # Create
-    create_res = client.post("/workflows/", json={"name": "Get By ID", "canvas_state": {}}, headers=auth_headers)
+    create_res = client.post("/api/workflows/", json={"name": "Get By ID", "canvas_state": {}}, headers=auth_headers)
     workflow_id = create_res.json()["id"]
     
     # Get
-    response = client.get(f"/workflows/{workflow_id}", headers=auth_headers)
+    response = client.get(f"/api/workflows/{workflow_id}", headers=auth_headers)
     assert response.status_code == 200
     assert response.json()["name"] == "Get By ID"
 
 def test_get_workflow_not_found(auth_headers):
-    response = client.get("/workflows/non-existent-id", headers=auth_headers)
+    response = client.get("/api/workflows/non-existent-id", headers=auth_headers)
     assert response.status_code == 404
 
 def test_update_workflow(auth_headers):
     # Create
-    create_res = client.post("/workflows/", json={"name": "To Update", "canvas_state": {}}, headers=auth_headers)
+    create_res = client.post("/api/workflows/", json={"name": "To Update", "canvas_state": {}}, headers=auth_headers)
     workflow_id = create_res.json()["id"]
     
     # Update
-    response = client.put(f"/workflows/{workflow_id}", json={
+    response = client.put(f"/api/workflows/{workflow_id}", json={
         "name": "Updated Name",
         "status": "active"
     }, headers=auth_headers)
@@ -98,24 +98,24 @@ def test_update_workflow(auth_headers):
     assert data["status"] == "active"
 
 def test_update_workflow_not_found(auth_headers):
-    response = client.put("/workflows/non-existent-id", json={"name": "New"}, headers=auth_headers)
+    response = client.put("/api/workflows/non-existent-id", json={"name": "New"}, headers=auth_headers)
     assert response.status_code == 404
 
 def test_delete_workflow(auth_headers):
     # Create
-    create_res = client.post("/workflows/", json={"name": "To Delete", "canvas_state": {}}, headers=auth_headers)
+    create_res = client.post("/api/workflows/", json={"name": "To Delete", "canvas_state": {}}, headers=auth_headers)
     workflow_id = create_res.json()["id"]
     
     # Delete
-    response = client.delete(f"/workflows/{workflow_id}", headers=auth_headers)
+    response = client.delete(f"/api/workflows/{workflow_id}", headers=auth_headers)
     assert response.status_code == 204
     
     # Verify gone
-    get_res = client.get(f"/workflows/{workflow_id}", headers=auth_headers)
+    get_res = client.get(f"/api/workflows/{workflow_id}", headers=auth_headers)
     assert get_res.status_code == 404
 
 def test_delete_workflow_not_found(auth_headers):
-    response = client.delete("/workflows/non-existent-id", headers=auth_headers)
+    response = client.delete("/api/workflows/non-existent-id", headers=auth_headers)
     assert response.status_code == 404
 
 # --- Execution Tests ---
@@ -130,14 +130,14 @@ def test_execute_workflow_success(mock_execute, auth_headers):
     
     # Create workflow with nodes
     nodes = [{"id": "1", "type": "input", "data": {}}]
-    create_res = client.post("/workflows/", json={
+    create_res = client.post("/api/workflows/", json={
         "name": "Exec Flow",
         "canvas_state": {"nodes": nodes, "edges": []}
     }, headers=auth_headers)
     workflow_id = create_res.json()["id"]
     
     # Execute
-    response = client.post(f"/workflows/{workflow_id}/execute", json={
+    response = client.post(f"/api/workflows/{workflow_id}/execute", json={
         "initial_inputs": {"start": "now"}
     }, headers=auth_headers)
     
@@ -148,12 +148,12 @@ def test_execute_workflow_success(mock_execute, auth_headers):
 
 def test_execute_workflow_no_nodes(auth_headers):
     # Create empty workflow
-    create_res = client.post("/workflows/", json={
+    create_res = client.post("/api/workflows/", json={
         "name": "Empty Flow",
         "canvas_state": {}
     }, headers=auth_headers)
     workflow_id = create_res.json()["id"]
     
-    response = client.post(f"/workflows/{workflow_id}/execute", json={}, headers=auth_headers)
+    response = client.post(f"/api/workflows/{workflow_id}/execute", json={}, headers=auth_headers)
     assert response.status_code == 400
     assert "no nodes" in response.json()["detail"].lower()

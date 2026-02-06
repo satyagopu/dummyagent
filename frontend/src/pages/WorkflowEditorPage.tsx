@@ -19,10 +19,15 @@ import axios from 'axios';
 
 import LLMNode from '@/components/nodes/LLMNode';
 import InputNode from '@/components/nodes/InputNode';
+import { Sidebar } from '@/components/Sidebar';
+import { useAuthStore } from '@/store/auth-store';
+
+import OutputNode from '@/components/nodes/OutputNode';
 
 const nodeTypes = {
     llm: LLMNode,
     input: InputNode,
+    output: OutputNode,
 };
 
 const initialNodes: Node[] = [
@@ -40,7 +45,7 @@ const initialNodes: Node[] = [
             system_prompt: 'You are a helpful assistant. Reply concisely.',
             temperature: 0.7
         },
-        position: { x: 400, y: 100 },
+        position: { x: 500, y: 100 },
     }
 ];
 
@@ -50,14 +55,23 @@ const initialEdges = [
 
 export default function WorkflowEditorPage() {
     const { id } = useParams();
-    const [nodes, _setNodes, onNodesChange] = useNodesState(initialNodes);
+    const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
     const [isExecuting, setIsExecuting] = useState(false);
+    const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 
     const onConnect = useCallback(
         (params: Connection) => setEdges((eds) => addEdge(params, eds)),
         [setEdges]
     );
+
+    const onNodeClick = useCallback((_: any, node: Node) => {
+        setSelectedNodeId(node.id);
+    }, []);
+
+    const onPaneClick = useCallback(() => {
+        setSelectedNodeId(null);
+    }, []);
 
     const handleSave = () => {
         const workflowState = { nodes, edges };
@@ -75,19 +89,21 @@ export default function WorkflowEditorPage() {
             const workflowId = id || 'temp-id';
 
             // Execute the workflow via backend API
+            // Send current nodes/edges to allow stateless execution (unsaved)
+            const token = useAuthStore.getState().token;
             const response = await axios.post(`http://localhost:8000/api/workflows/${workflowId}/execute`, {
-                initial_inputs: {}
+                initial_inputs: {},
+                nodes: nodes,
+                edges: edges
+            }, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
             });
 
             // Extract text from result for display
-            // The backend returns { results: { "nodeId": { ... } }, logs: [] }
-            // We want to show the final output.
-
             const results = response.data.results;
             const logEntries = response.data.logs || [];
-
-            // Find the last LLM output or Output node
-            // For this simple demo, we grab the first "generated_text" we find or the last log
 
             let displayOutput = "Execution successful";
 
@@ -113,17 +129,19 @@ export default function WorkflowEditorPage() {
         }
     };
 
+    const selectedNode = nodes.find(n => n.id === selectedNodeId);
+
     return (
-        <div className="space-y-4">
+        <div className="flex h-screen flex-col overflow-hidden bg-background text-foreground">
             {/* Header */}
             <motion.div
-                className="flex items-center justify-between"
+                className="flex items-center justify-between p-4 border-b z-10 bg-card"
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
             >
                 <div>
-                    <h1 className="text-3xl font-bold">Workflow Editor</h1>
-                    <p className="text-muted-foreground">Build your AI workflow</p>
+                    <h1 className="text-2xl font-bold">Workflow Editor</h1>
+                    <p className="text-sm text-muted-foreground">Build your AI workflow</p>
                 </div>
                 <div className="flex gap-2">
                     <Button variant="outline" onClick={handleSave} className="gap-2">
@@ -141,27 +159,41 @@ export default function WorkflowEditorPage() {
                 </div>
             </motion.div>
 
-            {/* Canvas */}
-            <motion.div
-                className="h-[calc(100vh-200px)] rounded-lg border bg-card shadow-accent"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-            >
-                <ReactFlow
-                    nodes={nodes}
-                    edges={edges}
-                    onNodesChange={onNodesChange}
-                    onEdgesChange={onEdgesChange}
-                    onConnect={onConnect}
-                    nodeTypes={nodeTypes}
-                    fitView
+            <div className="flex flex-1 overflow-hidden">
+                {/* Canvas */}
+                <div className="flex-1 relative bg-muted/10">
+                    <ReactFlow
+                        nodes={nodes}
+                        edges={edges}
+                        onNodesChange={onNodesChange}
+                        onEdgesChange={onEdgesChange}
+                        onConnect={onConnect}
+                        onNodeClick={onNodeClick}
+                        onPaneClick={onPaneClick}
+                        nodeTypes={nodeTypes}
+                        fitView
+                    >
+                        <Controls />
+                        <MiniMap />
+                        <Background gap={12} size={1} />
+                    </ReactFlow>
+                </div>
+
+                {/* Sidebar Property Panel */}
+                <motion.div
+                    initial={{ width: 0, opacity: 0 }}
+                    animate={{ width: selectedNode ? 320 : 0, opacity: selectedNode ? 1 : 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="border-l bg-card overflow-hidden h-full shadow-xl"
                 >
-                    <Controls />
-                    <MiniMap />
-                    <Background gap={12} size={1} />
-                </ReactFlow>
-            </motion.div>
+                    <Sidebar
+                        selectedNode={selectedNode}
+                        setNodes={setNodes}
+                        nodes={nodes}
+                        onClose={() => setSelectedNodeId(null)}
+                    />
+                </motion.div>
+            </div>
         </div>
     );
 }

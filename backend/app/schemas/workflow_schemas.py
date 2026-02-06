@@ -32,6 +32,8 @@ class WorkflowResponse(BaseModel):
 class WorkflowExecutionRequest(BaseModel):
     """Schema for executing a workflow"""
     initial_inputs: Optional[Dict[str, Any]] = None
+    nodes: Optional[List[Dict[str, Any]]] = None
+    edges: Optional[List[Dict[str, Any]]] = None
 
 class WorkflowExecutionResponse(BaseModel):
     """Schema for execution results"""

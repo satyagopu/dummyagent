@@ -125,22 +125,30 @@ async def execute_workflow(
     """Execute a workflow"""
     from app.core.executor import GraphExecutor
     
-    workflow = db.query(Workflow).filter(
-        Workflow.id == workflow_id,
-        Workflow.user_id == str(current_user.id)
-    ).first()
+    nodes = []
+    edges = []
+
+    # 1. Stateless Execution: Use nodes/edges from request if provided
+    if execution_request.nodes:
+        nodes = execution_request.nodes
+        edges = execution_request.edges or []
     
-    if not workflow:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Workflow not found"
-        )
-    
-    # Extract nodes and edges from canvas_state
-    # canvas_state format depends on ReactFlow. Usually has 'nodes' and 'edges' lists.
-    canvas_state = workflow.canvas_state or {}
-    nodes = canvas_state.get('nodes', [])
-    edges = canvas_state.get('edges', [])
+    # 2. Stateful Execution: Fetch from DB if not provided
+    else:
+        workflow = db.query(Workflow).filter(
+            Workflow.id == workflow_id,
+            Workflow.user_id == str(current_user.id)
+        ).first()
+        
+        if not workflow:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Workflow not found"
+            )
+        
+        canvas_state = workflow.canvas_state or {}
+        nodes = canvas_state.get('nodes', [])
+        edges = canvas_state.get('edges', [])
     
     if not nodes:
         raise HTTPException(

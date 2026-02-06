@@ -4,6 +4,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import WorkflowEditorPage from './pages/WorkflowEditorPage';
+import SettingsPage from './pages/SettingsPage'; // Added import for SettingsPage
 import AppLayout from './components/layout/AppLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 import './index.css';
@@ -30,6 +31,7 @@ export default function App() {
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="workflows/new" element={<WorkflowEditorPage />} />
           <Route path="workflows/:id/edit" element={<WorkflowEditorPage />} />
+          <Route path="settings" element={<SettingsPage />} /> {/* Added SettingsPage route */}
         </Route>
 
         {/* Catch-all redirect */}

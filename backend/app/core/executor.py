@@ -45,7 +45,7 @@ class GraphExecutor:
     def __init__(self):
         self.llm_service = get_llm_service()
 
-    async def execute(self, nodes: List[Dict], edges: List[Dict], initial_inputs: Dict[str, Any] = None) -> Dict[str, Any]:
+    async def execute(self, nodes: List[Dict], edges: List[Dict], initial_inputs: Dict[str, Any] = None, user_api_keys: Dict[str, str] = None) -> Dict[str, Any]:
         """
         Execute a workflow graph.
         Returns the final state/outputs of all nodes.
@@ -94,7 +94,7 @@ class GraphExecutor:
                 inputs = self._gather_inputs(node_id, edges, execution_context)
                 
                 # Execute Node Logic
-                output = await self._process_node(node_type, node_data, inputs, execution_context)
+                output = await self._process_node(node_type, node_data, inputs, execution_context, user_api_keys)
                 
                 execution_context[node_id] = output
                 execution_logs.append({
@@ -135,21 +135,21 @@ class GraphExecutor:
                     
         return inputs
 
-    async def _process_node(self, node_type: str, data: Dict, inputs: Dict, context: Dict) -> Any:
+    async def _process_node(self, node_type: str, data: Dict, inputs: Dict, context: Dict, user_api_keys: Dict[str, str] = None) -> Any:
         """Process a single node based on its type."""
         
         if node_type == 'input':
             return {**data, **context.get('initial_inputs', {})}
             
         elif node_type == 'llm':
-            return await self._process_llm_node(data, inputs)
+            return await self._process_llm_node(data, inputs, user_api_keys)
             
         elif node_type == 'output':
             # Output nodes just capture the final state
             return inputs
             
         elif node_type == 'agent':
-            return await self._process_agent_node(data, inputs)
+            return await self._process_agent_node(data, inputs, user_api_keys)
 
         elif node_type == 'tool':
             return self._process_tool_node(data, inputs)
@@ -162,7 +162,7 @@ class GraphExecutor:
             # Pass-through for unknown nodes
             return inputs
 
-    async def _process_llm_node(self, data: Dict, inputs: Dict) -> Dict:
+    async def _process_llm_node(self, data: Dict, inputs: Dict, user_api_keys: Dict[str, str] = None) -> Dict:
         """Handle LLM Node execution."""
         system_prompt = data.get('system_prompt', 'You are a helpful assistant.')
         user_prompt = inputs.get('prompt') or inputs.get('input') or inputs.get('value') or data.get('prompt') or "Hello!"
@@ -170,15 +170,26 @@ class GraphExecutor:
         model = data.get('model', 'gemini-pro')
         temperature = float(data.get('temperature', 0.7))
         
+        # Determine key
+        api_key = None
+        if user_api_keys:
+            if "gpt" in model:
+                api_key = user_api_keys.get('openai')
+            elif "gemini" in model:
+                api_key = user_api_keys.get('google')
+            elif "claude" in model:
+                api_key = user_api_keys.get('anthropic')
+
         response = await self.llm_service.generate_text(
             prompt=user_prompt,
             system_prompt=system_prompt,
             model_name=model,
-            temperature=temperature
+            temperature=temperature,
+            api_key=api_key
         )
         return {"generated_text": response}
 
-    async def _process_agent_node(self, data: Dict, inputs: Dict) -> Dict:
+    async def _process_agent_node(self, data: Dict, inputs: Dict, user_api_keys: Dict[str, str] = None) -> Dict:
         """Handle Agent Node execution with ReAct loop."""
         # 1. Get configuration
         system_prompt = data.get('system_prompt', 'You are a helpful AI assistant.')
@@ -193,7 +204,7 @@ class GraphExecutor:
                 tools.append(tool)
         
         # 3. Initialize LLM
-        llm = self._initialize_llm(model_name)
+        llm = self._initialize_llm(model_name, user_api_keys)
 
         # 4. Construct Prompt
         prompt = PromptTemplate.from_template(REACT_PROMPT_TEMPLATE)
@@ -227,21 +238,26 @@ class GraphExecutor:
         output = tool_service.execute_tool(tool_name, str(input_data))
         return {"output": output}
 
-    def _initialize_llm(self, model_name: str):
+    def _initialize_llm(self, model_name: str, user_api_keys: Dict[str, str] = None):
         """Helper to initialize the correct LLM backend based on model name."""
+        api_key = None
+        
         if "gpt" in model_name:
+            if user_api_keys: api_key = user_api_keys.get('openai')
             if ChatOpenAI:
-                 return ChatOpenAI(model=model_name, temperature=0, api_key=None) # Rely on env
+                 return ChatOpenAI(model=model_name, temperature=0, api_key=api_key) # If api_key is None, it falls back to env if configured
             logger.warning("langchain_openai not installed or failed to import, fallback to Gemini")
 
         if "claude" in model_name:
+             if user_api_keys: api_key = user_api_keys.get('anthropic')
              if ChatAnthropic:
-                return ChatAnthropic(model=model_name, temperature=0, api_key=None)
+                return ChatAnthropic(model=model_name, temperature=0, api_key=api_key)
         
         # Default to Gemini
         api_model_name = "gemini-1.5-pro"
         if "gemini" in model_name: 
             api_model_name = "gemini-1.5-pro"
+            if user_api_keys: api_key = user_api_keys.get('google')
         
-        return ChatGoogleGenerativeAI(model=api_model_name, temperature=0)
+        return ChatGoogleGenerativeAI(model=api_model_name, temperature=0, google_api_key=api_key)
 

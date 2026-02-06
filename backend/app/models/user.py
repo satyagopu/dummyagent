@@ -20,6 +20,7 @@ class User(Base):
     
     # Relationships
     workflows = relationship("Workflow", back_populates="user", cascade="all, delete-orphan")
+    credentials = relationship("UserCredential", back_populates="user", cascade="all, delete-orphan")
     
     def __repr__(self):
         return f"<User {self.email}>"

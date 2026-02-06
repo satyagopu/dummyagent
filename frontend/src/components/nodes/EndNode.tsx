@@ -3,7 +3,7 @@ import { Handle, Position } from 'reactflow';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { CircleStop } from 'lucide-react';
 
-const EndNode = ({ data, selected }: any) => {
+const EndNode = ({ selected }: any) => {
     return (
         <Card className={`w-40 shadow-md border-2 transition-all ${selected ? 'border-destructive ring-2 ring-destructive/20' : 'border-destructive/40'} bg-card/95 backdrop-blur-sm`}>
             <CardHeader className="p-3 flex flex-row items-center justify-center gap-2 space-y-0">

@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { Trash2, X, Settings2 } from 'lucide-react';
+import { Trash2, X } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
 import { useEffect, useState } from 'react';
 import axios from 'axios';

@@ -2,8 +2,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
 from dotenv import load_dotenv
-from app.api import auth, workflows
+from app.api import auth, workflows, settings
 from app.db.database import create_tables
+# Import models to ensure tables are created
+from app.models.user import User
+from app.models.workflow import Workflow
+from app.models.credential import UserCredential
 
 # Load environment variables
 load_dotenv()
@@ -36,6 +40,7 @@ async def startup_event():
 # Include routers
 app.include_router(auth.router, prefix="/api")
 app.include_router(workflows.router, prefix="/api")
+app.include_router(settings.router, prefix="/api")
 
 
 @app.get("/")

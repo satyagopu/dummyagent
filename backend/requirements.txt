@@ -37,4 +37,6 @@ langchain-community
 langchain-google-genai
 langchain-openai
 langchain-aws
+langchain-aws
 boto3
+cryptography

@@ -34,8 +34,8 @@ async def startup_event():
 
 
 # Include routers
-app.include_router(auth.router)
-app.include_router(workflows.router)
+app.include_router(auth.router, prefix="/api")
+app.include_router(workflows.router, prefix="/api")
 
 
 @app.get("/")

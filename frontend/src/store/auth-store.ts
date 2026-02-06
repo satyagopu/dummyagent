@@ -39,7 +39,7 @@ export const useAuthStore = create<AuthState>()(
             login: async (email: string, password: string) => {
                 set({ isLoading: true, error: null });
                 try {
-                    const response = await axios.post(`${API_URL}/auth/login`, {
+                    const response = await axios.post(`${API_URL}/api/auth/login`, {
                         email,
                         password,
                     });
@@ -61,7 +61,7 @@ export const useAuthStore = create<AuthState>()(
             register: async (email: string, password: string, fullName?: string) => {
                 set({ isLoading: true, error: null });
                 try {
-                    const response = await axios.post(`${API_URL}/auth/register`, {
+                    const response = await axios.post(`${API_URL}/api/auth/register`, {
                         email,
                         password,
                         full_name: fullName,
@@ -95,7 +95,7 @@ export const useAuthStore = create<AuthState>()(
                 if (!token) return;
 
                 try {
-                    const response = await axios.get(`${API_URL}/auth/me`, {
+                    const response = await axios.get(`${API_URL}/api/auth/me`, {
                         headers: {
                             Authorization: `Bearer ${token}`,
                         },

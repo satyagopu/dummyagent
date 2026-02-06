@@ -6,8 +6,14 @@ from app.models.workflow import Workflow
 from app.models.user import User
 from app.schemas.workflow_schemas import WorkflowCreate, WorkflowUpdate, WorkflowResponse, WorkflowExecutionRequest, WorkflowExecutionResponse
 from app.api.auth import get_current_user
+from app.services.tool_service import tool_service
 
 router = APIRouter(prefix="/workflows", tags=["Workflows"])
+
+@router.get("/tools")
+def list_tools():
+    """List all available tools."""
+    return tool_service.get_available_tools()
 
 @router.post("/", response_model=WorkflowResponse, status_code=status.HTTP_201_CREATED)
 async def create_workflow(

@@ -126,6 +126,22 @@ class GraphExecutor:
             # Output nodes just capture the final state
             return inputs
             
+        elif node_type == 'tool':
+            # Execute a tool
+            tool_name = data.get('tool')
+            input_data = inputs.get('input') or inputs.get('query') or inputs.get('expression') or " "
+            
+            if not tool_name:
+                raise ValueError("Tool node missing 'tool' name configuration")
+                
+            from app.services.tool_service import tool_service
+            output = tool_service.execute_tool(tool_name, str(input_data))
+            return {"output": output}
+
+        elif node_type == 'end':
+            # End node - semantically same as output, just stops the branch
+            return inputs
+
         else:
             # Pass-through for unknown nodes
             return inputs

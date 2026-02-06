@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { X } from 'lucide-react';
+import { X, Trash2 } from 'lucide-react';
 
 interface SidebarProps {
     selectedNode: any;
@@ -102,9 +102,126 @@ export function Sidebar({ selectedNode, setNodes, nodes, onClose }: SidebarProps
                 </div>
             )}
 
-            <div className="text-xs text-muted-foreground mt-8">
+            {selectedNode.type === 'custom' && (
+                <div className="space-y-6">
+                    <div className="space-y-2">
+                        <Label>Label</Label>
+                        <Input
+                            value={selectedNode.data.label || 'Custom Node'}
+                            onChange={(e) => handleChange('label', e.target.value)}
+                            placeholder="Node Label"
+                        />
+                    </div>
+
+                    {/* Inputs Management */}
+                    <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                            <Label className="text-xs font-semibold uppercase">Inputs</Label>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-6 text-[10px]"
+                                onClick={() => {
+                                    const inputs = selectedNode.data.inputs || [];
+                                    handleChange('inputs', [...inputs, { name: `input_${inputs.length + 1}`, type: 'string' }]);
+                                }}
+                            >
+                                + Add
+                            </Button>
+                        </div>
+                        <div className="space-y-2">
+                            {(selectedNode.data.inputs || []).map((input: any, index: number) => (
+                                <div key={index} className="flex gap-2 items-center">
+                                    <Input
+                                        value={input.name}
+                                        className="h-8 text-xs"
+                                        onChange={(e) => {
+                                            const newInputs = [...(selectedNode.data.inputs || [])];
+                                            newInputs[index].name = e.target.value;
+                                            handleChange('inputs', newInputs);
+                                        }}
+                                    />
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 text-destructive"
+                                        onClick={() => {
+                                            const newInputs = [...(selectedNode.data.inputs || [])];
+                                            newInputs.splice(index, 1);
+                                            handleChange('inputs', newInputs);
+                                        }}
+                                    >
+                                        <X className="h-3 w-3" />
+                                    </Button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Outputs Management */}
+                    <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                            <Label className="text-xs font-semibold uppercase">Outputs</Label>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-6 text-[10px]"
+                                onClick={() => {
+                                    const outputs = selectedNode.data.outputs || [];
+                                    handleChange('outputs', [...outputs, { name: `output_${outputs.length + 1}`, type: 'string' }]);
+                                }}
+                            >
+                                + Add
+                            </Button>
+                        </div>
+                        <div className="space-y-2">
+                            {(selectedNode.data.outputs || []).map((output: any, index: number) => (
+                                <div key={index} className="flex gap-2 items-center">
+                                    <Input
+                                        value={output.name}
+                                        className="h-8 text-xs"
+                                        onChange={(e) => {
+                                            const newOutputs = [...(selectedNode.data.outputs || [])];
+                                            newOutputs[index].name = e.target.value;
+                                            handleChange('outputs', newOutputs);
+                                        }}
+                                    />
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 text-destructive"
+                                        onClick={() => {
+                                            const newOutputs = [...(selectedNode.data.outputs || [])];
+                                            newOutputs.splice(index, 1);
+                                            handleChange('outputs', newOutputs);
+                                        }}
+                                    >
+                                        <X className="h-3 w-3" />
+                                    </Button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <div className="text-xs text-muted-foreground mt-4">
                 Node ID: {selectedNode.id}
             </div>
-        </div>
+
+            <Button
+                variant="destructive"
+                className="w-full mt-4 gap-2"
+                onClick={() => {
+                    setNodes(nodes.filter(n => n.id !== selectedNode.id));
+                    onClose();
+                }}
+            >
+                <Trash2 className="h-4 w-4" />
+                Delete Node
+            </Button>
+        </div >
     );
 }

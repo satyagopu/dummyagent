@@ -326,7 +326,12 @@ Each LLM node has a **dropdown to select the provider**:
 - Text Splitters
 - Embeddings
 
-**C. LangGraph Nodes**
+**C. Custom & Tool Nodes (Phase 5 Focus)**
+- **Tool Node**: Select from available tools (Search, Calculator, API)
+- **Custom Node**: User-defined input/output fields for flexible data handling
+- **Agent Node**: ReAct-style agent that can use tools autonomously
+
+**D. LangGraph Nodes**
 - StateGraph builder
 - Conditional edges
 - Parallel execution

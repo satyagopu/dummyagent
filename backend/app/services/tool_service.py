@@ -4,6 +4,7 @@ from langchain_core.tools import Tool
 from langchain_community.tools import WikipediaQueryRun
 from langchain_community.utilities import WikipediaAPIWrapper
 from langchain_core.pydantic_v1 import BaseModel, Field
+from simpleeval import simple_eval
 
 logger = logging.getLogger(__name__)
 
@@ -13,13 +14,9 @@ def calculator_func(input_str: str) -> str:
     WARNING: Uses eval() - strictly for demonstration checks.
     """
     try:
-        # In a production environment, use a library like 'numexpr' or 'simpleeval'
-        # to safely evaluate mathematical expressions.
-        # Check for obvious dangerous characters
-        if any(char in input_str for char in ['__', 'import', 'lambda']):
-            raise ValueError("Unsafe input detected")
-            
-        return str(eval(input_str))
+        # Use simpleeval for safe mathematical expression evaluation
+        # This prevents arbitrary code execution (B307)
+        return str(simple_eval(input_str))
     except Exception as e:
         logger.error(f"Calculator error for input '{input_str}': {e}")
         return f"Error calculating: {str(e)}"

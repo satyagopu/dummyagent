@@ -40,3 +40,4 @@ langchain-aws
 langchain-aws
 boto3
 cryptography
+simpleeval

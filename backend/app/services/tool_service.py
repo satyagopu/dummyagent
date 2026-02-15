@@ -3,7 +3,7 @@ import logging
 from langchain_core.tools import Tool
 from langchain_community.tools import WikipediaQueryRun
 from langchain_community.utilities import WikipediaAPIWrapper
-from langchain_core.pydantic_v1 import BaseModel, Field
+from pydantic import BaseModel, Field
 from simpleeval import simple_eval
 
 logger = logging.getLogger(__name__)

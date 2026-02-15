@@ -24,6 +24,12 @@ REACT_PROMPT_TEMPLATE = """Answer the following questions as best you can. You h
 
 {tools}
 
+IMPORTANT:
+1. You may ONLY use the tools listed above.
+2. If you need a tool that is not listed, DO NOT fabricate one.
+3. Instead, answer the question using your internal knowledge or state that you cannot answer.
+4. If the tools are empty, you must answer directly using your knowledge.
+
 Use the following format:
 
 Question: the input question you must answer
